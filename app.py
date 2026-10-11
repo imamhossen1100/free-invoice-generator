@@ -1,74 +1,199 @@
 import streamlit as st
 from fpdf import FPDF
 from datetime import datetime, timedelta
-import io
-import os
 
 # Page config
 st.set_page_config(
-    page_title="Free Invoice Generator",
+    page_title="Invoice Generator | Free Professional Invoices",
     page_icon="📄",
-    layout="centered"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better look
+# ========== MODERN PROFESSIONAL CSS (Light + Blue) ==========
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.2rem;
+    /* Main background */
+    .stApp {
+        background: #F8FAFC;
+        color: #0F172A;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0;
+    }
+    section[data-testid="stSidebar"] .stTextInput input,
+    section[data-testid="stSidebar"] .stTextArea textarea,
+    section[data-testid="stSidebar"] .stNumberInput input,
+    section[data-testid="stSidebar"] .stDateInput input {
+        background-color: #F8FAFC !important;
+        color: #0F172A !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+    }
+
+    /* Headers */
+    h1, h2, h3, h4 {
+        color: #0F172A !important;
+        font-weight: 700 !important;
+    }
+
+    /* Input fields */
+    .stTextInput input, .stTextArea textarea, .stNumberInput input,
+    .stDateInput input {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: #2563EB !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* Labels */
+    label {
+        color: #475569 !important;
+        font-weight: 500 !important;
+    }
+
+    /* Metric cards */
+    [data-testid="stMetric"] {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    [data-testid="stMetric"] label {
+        color: #64748B !important;
+    }
+    [data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: #0F172A !important;
         font-weight: 700;
-        color: #1a73e8;
-        text-align: center;
-        margin-bottom: 0.5rem;
     }
-    .sub-header {
-        text-align: center;
-        color: #5f6368;
-        margin-bottom: 2rem;
+
+    /* Primary button */
+    .stButton > button {
+        background: #2563EB !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.4rem !important;
+        transition: all 0.15s ease;
+        box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
     }
-    .stButton>button {
+    .stButton > button:hover {
+        background: #1D4ED8 !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
+    }
+
+    /* Download button */
+    .stDownloadButton > button {
+        background: #2563EB !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
         width: 100%;
-        background-color: #1a73e8;
-        color: white;
-        font-weight: 600;
     }
+
+    /* Dividers */
+    hr {
+        border-color: #E2E8F0 !important;
+        margin: 1.5rem 0 !important;
+    }
+
+    /* Success / Error */
+    .stSuccess {
+        background-color: #ECFDF5 !important;
+        border: 1px solid #A7F3D0 !important;
+        color: #065F46 !important;
+        border-radius: 8px;
+    }
+    .stError {
+        background-color: #FEF2F2 !important;
+        border: 1px solid #FECACA !important;
+        border-radius: 8px;
+    }
+
+    /* Total highlight box */
+    .total-box {
+        background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+        border: 1px solid #93C5FD;
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        text-align: center;
+    }
+    .total-box h2 {
+        color: #1D4ED8 !important;
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+    .total-label {
+        color: #64748B;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+
+    /* Caption */
+    .stCaption, small {
+        color: #94A3B8 !important;
+    }
+
+    /* Cleaner look */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<p class="main-header">📄 Free Invoice Generator</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">পেইড টুলের দরকার নেই — নিজেই প্রফেশনাল ইনভয়েস বানান</p>', unsafe_allow_html=True)
-
-# Sidebar for seller info
+# ========== SIDEBAR ==========
 with st.sidebar:
-    st.header("আপনার তথ্য (Seller)")
-    seller_name = st.text_input("আপনার নাম / কোম্পানি", value="Your Name / Company")
-    seller_email = st.text_input("ইমেইল", value="you@example.com")
-    seller_phone = st.text_input("ফোন", value="+880 1XXX-XXXXXX")
-    seller_address = st.text_area("ঠিকানা", value="Dhaka, Bangladesh")
-    
-    st.divider()
-    st.header("ইনভয়েস সেটিংস")
+    st.markdown("### 📄 Invoice Generator")
+    st.caption("Create. Send. Get Paid.")
+    st.markdown("---")
+
+    st.markdown("**Seller Information**")
+    seller_name = st.text_input("Name / Company", value="Your Name / Company")
+    seller_email = st.text_input("Email", value="you@example.com")
+    seller_phone = st.text_input("Phone", value="+880 1XXX-XXXXXX")
+    seller_address = st.text_area("Address", value="Dhaka, Bangladesh", height=70)
+
+    st.markdown("---")
+    st.markdown("**Invoice Settings**")
     invoice_number = st.text_input("Invoice Number", value=f"INV-{datetime.now().strftime('%Y%m%d')}-001")
     invoice_date = st.date_input("Invoice Date", value=datetime.now())
     due_date = st.date_input("Due Date", value=datetime.now() + timedelta(days=7))
     currency = st.selectbox("Currency", ["BDT (৳)", "USD ($)", "EUR (€)"], index=0)
-    
     tax_rate = st.number_input("Tax / VAT (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.5)
 
-# Main form - Client info
-st.subheader("ক্লায়েন্টের তথ্য")
+    st.markdown("---")
+    st.caption("Free & Open Source")
+
+# ========== MAIN CONTENT ==========
+st.markdown("## New Invoice")
+st.caption("Enter your services or products below to generate a professional invoice.")
+
+# Client Info
+st.markdown("##### Client Information")
 col1, col2 = st.columns(2)
 with col1:
-    client_name = st.text_input("ক্লায়েন্টের নাম *", placeholder="Client Name")
+    client_name = st.text_input("Client Name *", placeholder="Client / Company Name")
 with col2:
-    client_email = st.text_input("ক্লায়েন্টের ইমেইল", placeholder="client@email.com")
+    client_email = st.text_input("Client Email", placeholder="client@email.com")
+client_address = st.text_area("Client Address", placeholder="Full billing address", height=68)
 
-client_address = st.text_area("ক্লায়েন্টের ঠিকানা", placeholder="Client Address")
+st.markdown("---")
 
-st.divider()
-st.subheader("সার্ভিস / পণ্যের তালিকা")
+# Line Items
+st.markdown("##### Service / Product List")
 
-# Initialize session state for items
 if "line_items" not in st.session_state:
     st.session_state.line_items = [{"description": "", "quantity": 1.0, "rate": 0.0}]
 
@@ -79,95 +204,93 @@ def remove_item(index):
     if len(st.session_state.line_items) > 1:
         st.session_state.line_items.pop(index)
 
-# Display items
+# Column headers
+h1, h2, h3, h4 = st.columns([4.2, 1.4, 1.8, 0.7])
+h1.markdown("**Description**")
+h2.markdown("**Qty**")
+h3.markdown("**Rate**")
+h4.markdown("")
+
 for i, item in enumerate(st.session_state.line_items):
-    cols = st.columns([4, 1.5, 2, 1])
-    with cols[0]:
+    c1, c2, c3, c4 = st.columns([4.2, 1.4, 1.8, 0.7])
+    with c1:
         st.session_state.line_items[i]["description"] = st.text_input(
-            f"Description {i+1}", 
-            value=item["description"], 
-            key=f"desc_{i}",
-            placeholder="Service or product name"
+            "desc", value=item["description"], key=f"desc_{i}",
+            placeholder="Service or product name", label_visibility="collapsed"
         )
-    with cols[1]:
+    with c2:
         st.session_state.line_items[i]["quantity"] = st.number_input(
-            f"Qty {i+1}", 
-            min_value=0.0, 
-            value=float(item["quantity"]), 
-            step=0.5,
-            key=f"qty_{i}"
+            "qty", min_value=0.0, value=float(item["quantity"]), step=0.5,
+            key=f"qty_{i}", label_visibility="collapsed"
         )
-    with cols[2]:
+    with c3:
         st.session_state.line_items[i]["rate"] = st.number_input(
-            f"Rate {i+1}", 
-            min_value=0.0, 
-            value=float(item["rate"]), 
-            step=10.0,
-            key=f"rate_{i}"
+            "rate", min_value=0.0, value=float(item["rate"]), step=10.0,
+            key=f"rate_{i}", label_visibility="collapsed"
         )
-    with cols[3]:
-        st.write("")  # spacing
-        st.write("")
-        if st.button("🗑️", key=f"del_{i}"):
+    with c4:
+        if st.button("🗑️", key=f"del_{i}", help="Remove"):
             remove_item(i)
             st.rerun()
 
-st.button("➕ আরও আইটেম যোগ করুন", on_click=add_item)
+st.button("＋ Add Line Item", on_click=add_item)
 
-# Calculate totals
+# Calculate
 subtotal = sum(item["quantity"] * item["rate"] for item in st.session_state.line_items)
 tax_amount = subtotal * (tax_rate / 100)
 total = subtotal + tax_amount
-
-# Show summary
-st.divider()
-st.subheader("সারাংশ")
-col_a, col_b, col_c = st.columns(3)
-col_a.metric("Subtotal", f"{subtotal:,.2f}")
-col_b.metric(f"Tax ({tax_rate}%)", f"{tax_amount:,.2f}")
-col_c.metric("Total", f"{total:,.2f}", delta=None)
-
-# Currency symbol
 currency_symbol = "৳" if "BDT" in currency else ("$" if "USD" in currency else "€")
 
-# Generate PDF function
+st.markdown("---")
+
+# Summary
+s1, s2, s3 = st.columns(3)
+with s1:
+    st.metric("Subtotal", f"{currency_symbol}{subtotal:,.2f}")
+with s2:
+    st.metric(f"Tax ({tax_rate}%)", f"{currency_symbol}{tax_amount:,.2f}")
+with s3:
+    st.markdown(f"""
+    <div class="total-box">
+        <div class="total-label">Total Amount</div>
+        <h2>{currency_symbol}{total:,.2f}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ========== PDF GENERATION ==========
 def create_invoice_pdf():
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    
+
     # Header
     pdf.set_font("Helvetica", "B", 22)
-    pdf.set_text_color(26, 115, 232)
+    pdf.set_text_color(37, 99, 235)  # blue
     pdf.cell(0, 12, "INVOICE", ln=True, align="C")
     pdf.ln(5)
-    
-    # Seller & Client info
+
+    # Seller & Client
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_text_color(0, 0, 0)
     pdf.cell(95, 8, "From:", ln=0)
     pdf.cell(95, 8, "Bill To:", ln=1)
-    
+
     pdf.set_font("Helvetica", "", 10)
-    # Seller
     y_start = pdf.get_y()
     pdf.multi_cell(95, 6, f"{seller_name}\n{seller_email}\n{seller_phone}\n{seller_address}")
-    
-    # Client
     pdf.set_xy(105, y_start)
     pdf.multi_cell(95, 6, f"{client_name}\n{client_email}\n{client_address}")
-    
     pdf.ln(8)
-    
-    # Invoice meta
+
+    # Meta
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(60, 7, f"Invoice Number: {invoice_number}", ln=0)
+    pdf.cell(60, 7, f"Invoice #: {invoice_number}", ln=0)
     pdf.cell(60, 7, f"Date: {invoice_date.strftime('%d %b %Y')}", ln=0)
     pdf.cell(60, 7, f"Due: {due_date.strftime('%d %b %Y')}", ln=1)
     pdf.ln(5)
-    
+
     # Table header
-    pdf.set_fill_color(26, 115, 232)
+    pdf.set_fill_color(37, 99, 235)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(90, 9, "Description", border=0, fill=True)
@@ -175,53 +298,48 @@ def create_invoice_pdf():
     pdf.cell(35, 9, "Rate", border=0, fill=True, align="R")
     pdf.cell(40, 9, "Amount", border=0, fill=True, align="R")
     pdf.ln()
-    
-    # Table rows
+
+    # Rows
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("Helvetica", "", 10)
     fill = False
     for item in st.session_state.line_items:
-        if item["description"].strip() == "":
+        if not item["description"].strip():
             continue
         amount = item["quantity"] * item["rate"]
-        if fill:
-            pdf.set_fill_color(240, 240, 240)
-        else:
-            pdf.set_fill_color(255, 255, 255)
-        
+        pdf.set_fill_color(241, 245, 249) if fill else pdf.set_fill_color(255, 255, 255)
         pdf.cell(90, 8, item["description"][:45], border=0, fill=True)
         pdf.cell(25, 8, f"{item['quantity']:.1f}", border=0, fill=True, align="C")
         pdf.cell(35, 8, f"{currency_symbol}{item['rate']:,.2f}", border=0, fill=True, align="R")
         pdf.cell(40, 8, f"{currency_symbol}{amount:,.2f}", border=0, fill=True, align="R")
         pdf.ln()
         fill = not fill
-    
+
     pdf.ln(5)
-    
+
     # Totals
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(115, 7, "", ln=0)
     pdf.cell(35, 7, "Subtotal:", align="R")
     pdf.cell(40, 7, f"{currency_symbol}{subtotal:,.2f}", align="R", ln=1)
-    
+
     if tax_rate > 0:
         pdf.cell(115, 7, "", ln=0)
         pdf.cell(35, 7, f"Tax ({tax_rate}%):", align="R")
         pdf.cell(40, 7, f"{currency_symbol}{tax_amount:,.2f}", align="R", ln=1)
-    
+
     pdf.set_font("Helvetica", "B", 12)
     pdf.cell(115, 9, "", ln=0)
     pdf.cell(35, 9, "Total:", align="R")
     pdf.cell(40, 9, f"{currency_symbol}{total:,.2f}", align="R", ln=1)
-    
+
     # Footer
     pdf.ln(15)
     pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 6, "Thank you for your business!", ln=True, align="C")
     pdf.cell(0, 6, "This is a computer generated invoice.", ln=True, align="C")
-    
-    # fpdf2 newer versions return bytearray directly
+
     output = pdf.output(dest="S")
     if isinstance(output, bytearray):
         return bytes(output)
@@ -230,27 +348,26 @@ def create_invoice_pdf():
     else:
         return output.encode("latin-1")
 
-# Generate button
-st.divider()
-if st.button("🚀 Invoice তৈরি করুন ও ডাউনলোড করুন", type="primary"):
+# Generate Button
+st.markdown("---")
+if st.button("Generate Invoice & Download PDF", type="primary", use_container_width=True):
     if not client_name.strip():
-        st.error("ক্লায়েন্টের নাম দিতে হবে!")
+        st.error("Client name is required!")
     elif all(item["description"].strip() == "" for item in st.session_state.line_items):
-        st.error("অন্তত একটি আইটেম যোগ করুন!")
+        st.error("Please add at least one item!")
     else:
         try:
             pdf_bytes = create_invoice_pdf()
-            st.success("✅ Invoice সফলভাবে তৈরি হয়েছে!")
-            
+            st.success("Invoice generated successfully!")
             st.download_button(
-                label="📥 PDF ডাউনলোড করুন",
+                label="Download PDF Invoice",
                 data=pdf_bytes,
                 file_name=f"Invoice_{invoice_number}.pdf",
-                mime="application/pdf"
+                mime="application/pdf",
+                use_container_width=True
             )
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-# Footer
-st.divider()
-st.caption("Made with ❤️ for freelancers | Free & Open Source | Deploy on Streamlit Cloud")
+st.markdown("---")
+st.caption("Free & Open Source • Deploy on Streamlit Cloud • Made for freelancers")
