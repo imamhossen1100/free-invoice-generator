@@ -221,7 +221,14 @@ def create_invoice_pdf():
     pdf.cell(0, 6, "Thank you for your business!", ln=True, align="C")
     pdf.cell(0, 6, "This is a computer generated invoice.", ln=True, align="C")
     
-    return pdf.output(dest="S").encode("latin-1")
+    # fpdf2 newer versions return bytearray directly
+    output = pdf.output(dest="S")
+    if isinstance(output, bytearray):
+        return bytes(output)
+    elif isinstance(output, bytes):
+        return output
+    else:
+        return output.encode("latin-1")
 
 # Generate button
 st.divider()
