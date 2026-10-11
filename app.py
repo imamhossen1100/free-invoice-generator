@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ========== MODERN PROFESSIONAL CSS (Light + Blue + dark) ==========
+# ========== MODERN PROFESSIONAL CSS (Light + Blue) ==========
 st.markdown("""
 <style>
     /* Main background */
