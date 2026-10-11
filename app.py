@@ -10,16 +10,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ========== MODERN PROFESSIONAL CSS (Light + Blue) ==========
-st.markdown("""
-<style>
-    /* Main background */
-    .stApp {
-        background: #F8FAFC;
-        color: #0F172A;
-    }
+# ========== THEME STATE ==========
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
 
-    /* Sidebar */
+# ========== CSS ==========
+light_css = """
+<style>
+    .stApp { background: #F8FAFC; color: #0F172A; }
     section[data-testid="stSidebar"] {
         background: #FFFFFF !important;
         border-right: 1px solid #E2E8F0;
@@ -33,16 +31,8 @@ st.markdown("""
         border: 1px solid #E2E8F0 !important;
         border-radius: 8px !important;
     }
-
-    /* Headers */
-    h1, h2, h3, h4 {
-        color: #0F172A !important;
-        font-weight: 700 !important;
-    }
-
-    /* Input fields */
-    .stTextInput input, .stTextArea textarea, .stNumberInput input,
-    .stDateInput input {
+    h1, h2, h3, h4 { color: #0F172A !important; font-weight: 700 !important; }
+    .stTextInput input, .stTextArea textarea, .stNumberInput input, .stDateInput input {
         background-color: #FFFFFF !important;
         color: #0F172A !important;
         border: 1px solid #E2E8F0 !important;
@@ -52,14 +42,7 @@ st.markdown("""
         border-color: #2563EB !important;
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
     }
-
-    /* Labels */
-    label {
-        color: #475569 !important;
-        font-weight: 500 !important;
-    }
-
-    /* Metric cards */
+    label { color: #475569 !important; font-weight: 500 !important; }
     [data-testid="stMetric"] {
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
@@ -67,15 +50,10 @@ st.markdown("""
         padding: 16px 20px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    [data-testid="stMetric"] label {
-        color: #64748B !important;
-    }
+    [data-testid="stMetric"] label { color: #64748B !important; }
     [data-testid="stMetric"] [data-testid="stMetricValue"] {
-        color: #0F172A !important;
-        font-weight: 700;
+        color: #0F172A !important; font-weight: 700;
     }
-
-    /* Primary button */
     .stButton > button {
         background: #2563EB !important;
         color: white !important;
@@ -91,8 +69,6 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         transform: translateY(-1px);
     }
-
-    /* Download button */
     .stDownloadButton > button {
         background: #2563EB !important;
         color: white !important;
@@ -101,14 +77,7 @@ st.markdown("""
         font-weight: 600 !important;
         width: 100%;
     }
-
-    /* Dividers */
-    hr {
-        border-color: #E2E8F0 !important;
-        margin: 1.5rem 0 !important;
-    }
-
-    /* Success / Error */
+    hr { border-color: #E2E8F0 !important; margin: 1.5rem 0 !important; }
     .stSuccess {
         background-color: #ECFDF5 !important;
         border: 1px solid #A7F3D0 !important;
@@ -120,8 +89,6 @@ st.markdown("""
         border: 1px solid #FECACA !important;
         border-radius: 8px;
     }
-
-    /* Total highlight box */
     .total-box {
         background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
         border: 1px solid #93C5FD;
@@ -141,17 +108,114 @@ st.markdown("""
         font-weight: 500;
         margin-bottom: 0.2rem;
     }
-
-    /* Caption */
-    .stCaption, small {
-        color: #94A3B8 !important;
-    }
-
-    /* Cleaner look */
+    .stCaption, small { color: #94A3B8 !important; }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
-""", unsafe_allow_html=True)
+"""
+
+dark_css = """
+<style>
+    .stApp {
+        background: linear-gradient(160deg, #0B1120 0%, #0F172A 50%, #111827 100%);
+        color: #E2E8F0;
+    }
+    section[data-testid="stSidebar"] {
+        background: #0B1120 !important;
+        border-right: 1px solid #1E293B;
+    }
+    section[data-testid="stSidebar"] * { color: #E2E8F0 !important; }
+    section[data-testid="stSidebar"] .stTextInput input,
+    section[data-testid="stSidebar"] .stTextArea textarea,
+    section[data-testid="stSidebar"] .stNumberInput input,
+    section[data-testid="stSidebar"] .stDateInput input {
+        background-color: #1E293B !important;
+        color: #F1F5F9 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+    }
+    h1, h2, h3, h4 { color: #F8FAFC !important; font-weight: 700 !important; }
+    .stTextInput input, .stTextArea textarea, .stNumberInput input, .stDateInput input {
+        background-color: #1E293B !important;
+        color: #F1F5F9 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: #10B981 !important;
+        box-shadow: 0 0 0 1px #10B981 !important;
+    }
+    label { color: #94A3B8 !important; font-weight: 500 !important; }
+    [data-testid="stMetric"] {
+        background: #1E293B;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 16px 20px;
+    }
+    [data-testid="stMetric"] label { color: #94A3B8 !important; }
+    [data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: #10B981 !important; font-weight: 700;
+    }
+    .stButton > button {
+        background: linear-gradient(135deg, #059669, #10B981) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.2rem !important;
+        transition: all 0.2s ease;
+    }
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #047857, #059669) !important;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+        transform: translateY(-1px);
+    }
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, #059669, #10B981) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        width: 100%;
+    }
+    hr { border-color: #1E293B !important; }
+    .stSuccess {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        border: 1px solid #10B981 !important;
+        color: #6EE7B7 !important;
+    }
+    .stError {
+        background-color: rgba(239, 68, 68, 0.15) !important;
+        border: 1px solid #EF4444 !important;
+    }
+    .total-box {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
+        border: 1px solid #10B981;
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+    }
+    .total-box h2 {
+        color: #10B981 !important;
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    .total-label {
+        color: #94A3B8;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    .stCaption { color: #64748B !important; }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+</style>
+"""
+
+# Apply theme CSS
+if st.session_state.theme == "dark":
+    st.markdown(dark_css, unsafe_allow_html=True)
+else:
+    st.markdown(light_css, unsafe_allow_html=True)
 
 # ========== SIDEBAR ==========
 with st.sidebar:
@@ -159,6 +223,13 @@ with st.sidebar:
     st.caption("Create. Send. Get Paid.")
     st.markdown("---")
 
+    # Theme Toggle
+    theme_label = "🌙 Dark Mode" if st.session_state.theme == "light" else "☀️ Light Mode"
+    if st.button(theme_label, use_container_width=True):
+        st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
+        st.rerun()
+
+    st.markdown("---")
     st.markdown("**Seller Information**")
     seller_name = st.text_input("Name / Company", value="Your Name / Company")
     seller_email = st.text_input("Email", value="you@example.com")
@@ -263,9 +334,15 @@ def create_invoice_pdf():
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # Header
+    # Header color based on theme
+    if st.session_state.theme == "dark":
+        pdf.set_text_color(16, 185, 129)  # emerald
+        header_fill = (16, 185, 129)
+    else:
+        pdf.set_text_color(37, 99, 235)  # blue
+        header_fill = (37, 99, 235)
+
     pdf.set_font("Helvetica", "B", 22)
-    pdf.set_text_color(37, 99, 235)  # blue
     pdf.cell(0, 12, "INVOICE", ln=True, align="C")
     pdf.ln(5)
 
@@ -290,7 +367,7 @@ def create_invoice_pdf():
     pdf.ln(5)
 
     # Table header
-    pdf.set_fill_color(37, 99, 235)
+    pdf.set_fill_color(*header_fill)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(90, 9, "Description", border=0, fill=True)
