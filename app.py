@@ -311,6 +311,8 @@ subtotal = sum(item["quantity"] * item["rate"] for item in st.session_state.line
 tax_amount = subtotal * (tax_rate / 100)
 total = subtotal + tax_amount
 currency_symbol = "৳" if "BDT" in currency else ("$" if "USD" in currency else "€")
+# PDF-safe symbol (Helvetica doesn't support ৳)
+pdf_currency = "BDT " if "BDT" in currency else ("$" if "USD" in currency else "EUR ")
 
 st.markdown("---")
 
@@ -387,8 +389,8 @@ def create_invoice_pdf():
         pdf.set_fill_color(241, 245, 249) if fill else pdf.set_fill_color(255, 255, 255)
         pdf.cell(90, 8, item["description"][:45], border=0, fill=True)
         pdf.cell(25, 8, f"{item['quantity']:.1f}", border=0, fill=True, align="C")
-        pdf.cell(35, 8, f"{currency_symbol}{item['rate']:,.2f}", border=0, fill=True, align="R")
-        pdf.cell(40, 8, f"{currency_symbol}{amount:,.2f}", border=0, fill=True, align="R")
+        pdf.cell(35, 8, f"{pdf_currency}{item['rate']:,.2f}", border=0, fill=True, align="R")
+        pdf.cell(40, 8, f"{pdf_currency}{amount:,.2f}", border=0, fill=True, align="R")
         pdf.ln()
         fill = not fill
 
@@ -398,17 +400,17 @@ def create_invoice_pdf():
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(115, 7, "", ln=0)
     pdf.cell(35, 7, "Subtotal:", align="R")
-    pdf.cell(40, 7, f"{currency_symbol}{subtotal:,.2f}", align="R", ln=1)
+    pdf.cell(40, 7, f"{pdf_currency}{subtotal:,.2f}", align="R", ln=1)
 
     if tax_rate > 0:
         pdf.cell(115, 7, "", ln=0)
         pdf.cell(35, 7, f"Tax ({tax_rate}%):", align="R")
-        pdf.cell(40, 7, f"{currency_symbol}{tax_amount:,.2f}", align="R", ln=1)
+        pdf.cell(40, 7, f"{pdf_currency}{tax_amount:,.2f}", align="R", ln=1)
 
     pdf.set_font("Helvetica", "B", 12)
     pdf.cell(115, 9, "", ln=0)
     pdf.cell(35, 9, "Total:", align="R")
-    pdf.cell(40, 9, f"{currency_symbol}{total:,.2f}", align="R", ln=1)
+    pdf.cell(40, 9, f"{pdf_currency}{total:,.2f}", align="R", ln=1)
 
     # Footer
     pdf.ln(15)
